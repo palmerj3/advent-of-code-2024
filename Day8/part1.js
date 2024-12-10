@@ -1,0 +1,111 @@
+const fs = require('fs');
+//const input = fs.readFileSync('./Day8/inputSample', {encoding: 'utf8'});
+const input = fs.readFileSync('./Day8/input', {encoding: 'utf8'});
+
+let matrix = [];
+let antennas = {};
+let antinodes = {};
+
+input.split('\n').forEach((line, y) => {
+    matrix.push(line.split(''));
+
+    matrix[y].forEach((m, x) => {
+        if (m !== '.') {
+            if(!antennas.hasOwnProperty(m)) {
+                antennas[m] = [];
+            }
+
+            antennas[m].push([y,x]);
+        }
+    })
+});
+
+function drawMatrixWithAntinodes(m, a) {
+    let mTmp = JSON.parse(JSON.stringify(m, null, 2));
+
+    Object.keys(a).forEach((ant) => {
+        let y = ant.split(',')[0];
+        let x = ant.split(',')[1];
+
+        if (mTmp[y][x] === '.') {
+            mTmp[y][x] = '#';
+        } else {
+            mTmp[y][x] = '=';
+        }
+    });
+
+    mTmp.forEach((row) => {
+        console.log(row.join(''));
+    });
+}
+
+Object.keys(antennas).forEach((a) => {
+    let localAntennas = antennas[a];
+
+    for (let i = 0; i < localAntennas.length; i++) {
+        for (let x = 0; x < localAntennas.length; x++) {
+            if (i === x) {
+                continue;
+            }
+
+            let a1Y, a1X;
+            let yDiff, xDiff;
+
+            // Determine Y difference
+            if (localAntennas[i][0] < localAntennas[x][0]) {
+                // 1 is lower (higher) than 2
+                yDiff = localAntennas[x][0] - localAntennas[i][0];
+
+                // Determine X difference
+                if (localAntennas[i][1] < localAntennas[x][1]) {
+                    // 1 is to the left of 2
+                    xDiff = localAntennas[x][1] - localAntennas[i][1];
+                    a1X = localAntennas[i][1] - xDiff;
+                } else if (localAntennas[i][1] > localAntennas[x][1]) {
+                    // 1 is to the right of 2
+                    xDiff = localAntennas[i][1] - localAntennas[x][1];
+                    a1X = localAntennas[i][1] + xDiff;
+                } else {
+                    // Same X value
+                    xDiff = 0;
+                    a1X = localAntennas[i][1];
+                }
+
+                a1Y = localAntennas[i][0] - yDiff;
+            } else if (localAntennas[i][0] > localAntennas[x][0]) {
+                // 1 is higher (lower) than 2
+                yDiff = localAntennas[i][0] - localAntennas[x][0];
+
+                // Determine X difference
+                if (localAntennas[i][1] < localAntennas[x][1]) {
+                    // 1 is to the right of 2
+                    xDiff = localAntennas[x][1] - localAntennas[i][1];
+                    a1X = localAntennas[i][1] - xDiff;
+                } else if (localAntennas[i][1] > localAntennas[x][1]) {
+                    // 1 is to the left of 2
+                    xDiff = localAntennas[i][1] - localAntennas[x][1];
+                    a1X = localAntennas[i][1] + xDiff;
+                } else {
+                    // Same X value
+                    xDiff = 0;
+                    a1X = localAntennas[i][1];
+                }
+
+                a1Y = localAntennas[i][0] + yDiff;
+            } else {
+                // Same Y value
+                yDiff = 0;
+                a1Y = localAntennas[i][0];
+            }
+
+            // Determine if antinode locations are within the map boundaries
+            if (a1Y >= 0 && a1Y <= matrix.length-1 && a1X >= 0 && a1X <= matrix[0].length-1) {
+                antinodes[`${a1Y},${a1X}`] = a;
+            }
+        }
+    }
+});
+
+drawMatrixWithAntinodes(matrix, antinodes);
+console.log(antinodes);
+console.log(Object.keys(antinodes).length);
